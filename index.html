@@ -174,18 +174,10 @@
           This simulation ran <strong>${simulations}</strong> scenarios over a <strong>${years}-year</strong> period.
         </p>
         <ul>
-          <li>
-            💰 <strong>Average net return:</strong> <strong>€${avg.toFixed(0)}</strong>
-          </li>
-          <li>
-            ✅ <strong>Break-even probability:</strong> <strong>${breakEvenPercent}%</strong>
-          </li>
-          <li>
-            📈 <strong>Maximum return:</strong> <strong>€${max.toFixed(0)}</strong>
-          </li>
-          <li>
-            📉 <strong>Minimum return:</strong> <strong>€${min.toFixed(0)}</strong>
-          </li>
+          <li>💰 <strong>Average net return:</strong> <strong>€${avg.toFixed(0)}</strong></li>
+          <li>✅ <strong>Break-even probability:</strong> <strong>${breakEvenPercent}%</strong></li>
+          <li>📈 <strong>Maximum return:</strong> <strong>€${max.toFixed(0)}</strong></li>
+          <li>📉 <strong>Minimum return:</strong> <strong>€${min.toFixed(0)}</strong></li>
         </ul>
         <p>
           The chart below shows the distribution of net returns over ${years} years.
@@ -201,13 +193,15 @@
       const colors = Array(20).fill('');
       const min = Math.min(...data);
       const max = Math.max(...data);
-      const range = max - min || 1; // prevent division by zero
+      const range = max - min || 1;
 
       data.forEach(val => {
         let index = Math.floor((val - min) / range * bins.length);
         if (index >= bins.length) index = bins.length - 1;
         bins[index]++;
       });
+
+      const probabilities = bins.map(count => count / data.length);
 
       const labels = bins.map((_, i) => {
         const low = min + (range / bins.length) * i;
@@ -224,17 +218,38 @@
         data: {
           labels: labels,
           datasets: [{
-            label: 'Net return distribution',
-            data: bins,
+            label: 'Probability of net return',
+            data: probabilities,
             backgroundColor: colors
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  let pct = (ctx.raw * 100).toFixed(1);
+                  return `Probability: ${pct}%`;
+                }
+              }
+            }
           },
           scales: {
+            y: {
+              title: {
+                display: true,
+                text: 'Probability'
+              },
+              ticks: {
+                callback: function(value) {
+                  return (value * 100).toFixed(0) + '%';
+                },
+                beginAtZero: true,
+                max: 1
+              }
+            },
             x: {
               ticks: {
                 maxRotation: 90,
