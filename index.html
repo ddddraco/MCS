@@ -1,67 +1,132 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>太阳能投资蒙特卡洛模拟器</title>
+  <title>Solar Investment Monte Carlo Simulator</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: sans-serif;
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      background: #f6f8fa;
     }
+
+    header {
+      background: #0d9488;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 1rem;
+      gap: 1rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .left, .right {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .left {
+      flex: 1 1 300px;
+      min-width: 280px;
+    }
+
+    .right {
+      flex: 2 1 500px;
+    }
+
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: inline-block;
+      width: 160px;
+      font-weight: bold;
+    }
+
     input {
-      padding: 5px;
+      padding: 6px;
       width: 100px;
     }
-    label {
-      margin-right: 10px;
-    }
-    .input-group {
-      margin-bottom: 10px;
-    }
+
     button {
-      padding: 8px 16px;
-      font-size: 16px;
       margin-top: 10px;
+      padding: 8px 16px;
+      background: #0d9488;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
     }
+
     #results {
-      margin-top: 30px;
+      margin-top: 20px;
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>☀️ 太阳能投资蒙特卡洛模拟器</h1>
+  <header>
+    <h1>Solar Investment Monte Carlo Simulator</h1>
+    <p>Estimate potential return on investment over 20 years</p>
+  </header>
 
-  <div class="input-group">
-    <label>安装成本：</label><input type="number" id="cost" value="50000" /> 元
-  </div>
-  <div class="input-group">
-    <label>年发电量：</label><input type="number" id="production" value="1500" /> kWh
-  </div>
-  <div class="input-group">
-    <label>电价（起始）：</label><input type="number" id="price" value="0.6" step="0.01" /> 元/kWh
-  </div>
-  <div class="input-group">
-    <label>光照效率均值：</label><input type="number" id="sunMean" value="0.8" step="0.01" />
-    <label>标准差：</label><input type="number" id="sunStd" value="0.1" step="0.01" />
-  </div>
-  <div class="input-group">
-    <label>电价增长率均值：</label><input type="number" id="growthMean" value="0.02" step="0.01" />
-    <label>标准差：</label><input type="number" id="growthStd" value="0.03" step="0.01" />
-  </div>
+  <div class="container">
+    <div class="left">
+      <div class="input-group">
+        <label>Installation cost:</label><input type="number" id="cost" value="6500" /> €
+      </div>
+      <div class="input-group">
+        <label>Annual production:</label><input type="number" id="production" value="5000" /> kWh
+      </div>
+      <div class="input-group">
+        <label>Starting electricity price:</label><input type="number" id="price" value="0.38" step="0.01" /> €/kWh
+      </div>
+      <div class="input-group">
+        <label>Sunlight efficiency mean:</label><input type="number" id="sunMean" value="0.85" step="0.01" />
+      </div>
+      <div class="input-group">
+        <label>Sunlight std deviation:</label><input type="number" id="sunStd" value="0.05" step="0.01" />
+      </div>
+      <div class="input-group">
+        <label>Price growth mean:</label><input type="number" id="growthMean" value="0.03" step="0.01" />
+      </div>
+      <div class="input-group">
+        <label>Growth std deviation:</label><input type="number" id="growthStd" value="0.02" step="0.01" />
+      </div>
+      <button onclick="runSimulation()">Run Simulation</button>
+    </div>
 
-  <button onclick="runSimulation()">开始模拟</button>
-
-  <div id="results"></div>
-
-  <canvas id="chart" height="100"></canvas>
+    <div class="right">
+      <div id="results">
+        <p>Please click "Run Simulation" to view results.</p>
+      </div>
+      <canvas id="chart" height="120"></canvas>
+    </div>
+  </div>
 
   <script>
     function randNorm(mean, stdDev) {
-      // Box-Muller transform
       let u1 = Math.random();
       let u2 = Math.random();
       let randStdNormal = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
@@ -78,7 +143,7 @@
       const growthStd = parseFloat(document.getElementById("growthStd").value);
 
       const years = 20;
-      const simulations = 100;
+      const simulations = 1000;
       const finalSavings = [];
 
       for (let i = 0; i < simulations; i++) {
@@ -99,18 +164,18 @@
       const min = Math.min(...finalSavings);
 
       document.getElementById("results").innerHTML = `
-        <h2>📊 模拟结果</h2>
-        <p>模拟次数：${simulations}</p>
-        <p>平均总收益：<strong>¥${avg.toFixed(0)}</strong></p>
-        <p>回本概率（收益 ≥ ¥${cost}）：<strong>${((breakEvenCount / simulations) * 100).toFixed(1)}%</strong></p>
-        <p>最高收益：¥${max.toFixed(0)}，最低收益：¥${min.toFixed(0)}</p>
+        <h2>📊 Simulation Results</h2>
+        <p>Simulations run: ${simulations}</p>
+        <p>Average total savings: <strong>€${avg.toFixed(0)}</strong></p>
+        <p>Break-even probability (≥ €${cost}): <strong>${((breakEvenCount / simulations) * 100).toFixed(1)}%</strong></p>
+        <p>Max savings: €${max.toFixed(0)}, Min savings: €${min.toFixed(0)}</p>
       `;
 
       renderChart(finalSavings);
     }
 
     function renderChart(data) {
-      const bins = Array(10).fill(0);
+      const bins = Array(20).fill(0);
       const min = Math.min(...data);
       const max = Math.max(...data);
       const range = max - min;
@@ -123,7 +188,7 @@
 
       const labels = bins.map((_, i) => {
         const low = min + (range / bins.length) * i;
-        return `¥${Math.round(low)}`;
+        return `€${Math.round(low)}`;
       });
 
       if (window.myChart) window.myChart.destroy();
@@ -133,7 +198,7 @@
         data: {
           labels: labels,
           datasets: [{
-            label: '模拟收益分布',
+            label: 'Savings distribution',
             data: bins,
             backgroundColor: 'rgba(75, 192, 192, 0.6)'
           }]
